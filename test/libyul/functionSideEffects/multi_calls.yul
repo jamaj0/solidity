@@ -16,7 +16,7 @@
 }
 // ----
 // : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: invalidatesStorage
-// b: invalidatesStorage
-// c: invalidatesStorage, invalidatesMemory
+// a: not deterministic, writes storage
+// b: not deterministic, writes storage
+// c: not deterministic, writes storage, writes memory
 // d: movable, sideEffectFree, sideEffectFreeIfNoMSize

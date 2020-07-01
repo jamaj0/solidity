@@ -4,6 +4,6 @@
   pop(f())
 }
 // ----
-// :
-// f:
-// g:
+// : movable, sideEffectFree, sideEffectFreeIfNoMSize, not deterministic
+// f: movable, sideEffectFree, sideEffectFreeIfNoMSize, not deterministic
+// g: movable, sideEffectFree, sideEffectFreeIfNoMSize, not deterministic

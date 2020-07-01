@@ -7,5 +7,5 @@
         sstore(0, mload(0))
 }
 // ----
-// : invalidatesStorage, invalidatesMemory
-// foo: invalidatesMemory
+// : not deterministic, writes storage, writes memory
+// foo: not deterministic, writes memory
