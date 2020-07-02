@@ -37,23 +37,29 @@ using namespace solidity;
 using namespace solidity::yul;
 
 namespace {
-FunctionCall* findMemoryInit(Object& _object)
+class MemoryInitFinder: ASTModifier
 {
-	if (!_object.code || _object.code->statements.empty())
-		return nullptr;
-	if (auto block = std::get_if<Block>(&_object.code->statements.front()))
-		if (!block->statements.empty())
-			if (auto expressionStatement = std::get_if<ExpressionStatement>(&block->statements.front()))
-				if (auto functionCall = std::get_if<FunctionCall>(&expressionStatement->expression))
-					if (functionCall->functionName.name == "mstore"_yulstring)
-						if (
-							auto mpos = std::get_if<Literal>(&functionCall->arguments.front());
-							mpos && valueOfLiteral(*mpos) == 64 /* TODO: avoid hardcoding this */
-						)
-							return functionCall;
-
-	return nullptr;
-}
+public:
+	static FunctionCall* run(Block& _block)
+	{
+		MemoryInitFinder memoryInitFinder;
+		memoryInitFinder(_block);
+		return memoryInitFinder.m_memoryInit;
+	}
+	using ASTModifier::operator();
+	virtual void operator()(FunctionCall& _functionCall)
+	{
+		ASTModifier::operator()(_functionCall);
+		if (_functionCall.functionName.name == "memoryinit"_yulstring)
+		{
+			yulAssert(!m_memoryInit, "More than one memory init.");
+			m_memoryInit = &_functionCall;
+		}
+	}
+private:
+	MemoryInitFinder() = default;
+	FunctionCall* m_memoryInit = nullptr;
+};
 
 class VariableEscalator: ASTModifier
 {
@@ -237,20 +243,20 @@ private:
 
 void MemoryEscalator::run(OptimiserStepContext& _context, Object& _object, bool _optimizeStackAllocation)
 {
+	if (!_object.code)
+		return;
+
 	auto functionStackErrorInfo = CompilabilityChecker::run(_context.dialect, _object, _optimizeStackAllocation);
 	if (functionStackErrorInfo.empty())
 		return;
 
 	yulAssert(dynamic_cast<EVMDialect const*>(&_context.dialect), "MemoryEscalator can only be run on EVMDialect objects.");
-	// TODO: make this more robust with value tracking and stepping through the outermost block
-	FunctionCall* memoryInit = findMemoryInit(_object);
-	if (!memoryInit)
+	Literal* memoryInitLiteral = nullptr;
+	if (FunctionCall* memoryInit = MemoryInitFinder::run(*_object.code))
+		memoryInitLiteral = std::get_if<Literal>(&memoryInit->arguments.back());
+	if (!memoryInitLiteral)
 		return;
-	u256 reservedMemory = 0;
-	if (auto reservedMemoryLiteral = std::get_if<Literal>(&memoryInit->arguments.back()))
-		reservedMemory = valueOfLiteral(*reservedMemoryLiteral);
-	else
-		return;
+	u256 reservedMemory = valueOfLiteral(*memoryInitLiteral);
 
 	auto callGraph = CallGraphGenerator::callGraph(*_object.code).functionCalls;
 
@@ -307,16 +313,7 @@ void MemoryEscalator::run(OptimiserStepContext& _context, Object& _object, bool 
 		requiredSlots = nextAvailableSlots[YulString{}];
 	}
 
-	auto loc = locationOf(memoryInit->arguments.back());
-	FunctionCall memoryInitAdd{
-		loc,
-		Identifier{loc, "add"_yulstring},
-		{
-			std::move(memoryInit->arguments.back()),
-			Literal{loc, LiteralKind::Number, YulString{to_string(32 * requiredSlots)}, {}}
-		}
-	};
-	memoryInit->arguments.back() = std::move(memoryInitAdd);
+	memoryInitLiteral->value = YulString{util::toCompactHexWithPrefix(reservedMemory + 32 * requiredSlots)};
 
 	if (_object.code)
 		VariableEscalator{assignedMemorySlots, reservedMemory, _context.dispenser}(*_object.code);
