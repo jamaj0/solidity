@@ -558,9 +558,9 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 	// Similarly we assume bitwise shifting and create2 go together.
 	yulAssert(m_evmVersion.hasBitwiseShifting() == m_evmVersion.hasCreate2(), "");
 
-	auto errorForVM = [&](string const& vmKindMessage) {
+	auto errorForVM = [&](ErrorId _errorId, string const& vmKindMessage) {
 		m_errorReporter.typeError(
-			7079_error,
+			_errorId,
 			_location,
 			"The \"" +
 			boost::to_lower_copy(instructionInfo(_instr).name)
@@ -577,21 +577,21 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 		_instr == evmasm::Instruction::RETURNDATACOPY ||
 		_instr == evmasm::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
-		errorForVM("only available for Byzantium-compatible");
+		errorForVM(7079_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
-		errorForVM("only available for Byzantium-compatible");
+		errorForVM(7080_error, "only available for Byzantium-compatible");
 	else if ((
 		_instr == evmasm::Instruction::SHL ||
 		_instr == evmasm::Instruction::SHR ||
 		_instr == evmasm::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
-		errorForVM("only available for Constantinople-compatible");
+		errorForVM(7081_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
-		errorForVM("only available for Constantinople-compatible");
+		errorForVM(7082_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-		errorForVM("only available for Constantinople-compatible");
+		errorForVM(7083_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
-		errorForVM("only available for Istanbul-compatible");
+		errorForVM(7084_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.warning(
 			2450_error,
@@ -601,7 +601,7 @@ bool AsmAnalyzer::warnOnInstructions(evmasm::Instruction _instr, SourceLocation 
 			"\" instruction is deprecated and will be removed in the next breaking release."
 		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
-		errorForVM("only available for Istanbul-compatible");
+		errorForVM(7085_error, "only available for Istanbul-compatible");
 	else if (
 		_instr == evmasm::Instruction::JUMP ||
 		_instr == evmasm::Instruction::JUMPI ||
