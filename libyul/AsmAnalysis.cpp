@@ -577,21 +577,21 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		_instr == evmasm::Instruction::RETURNDATACOPY ||
 		_instr == evmasm::Instruction::RETURNDATASIZE
 	) && !m_evmVersion.supportsReturndata())
-		errorForVM(7079_error, "only available for Byzantium-compatible");
+		errorForVM(7756_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
-		errorForVM(7080_error, "only available for Byzantium-compatible");
+		errorForVM(1503_error, "only available for Byzantium-compatible");
 	else if ((
 		_instr == evmasm::Instruction::SHL ||
 		_instr == evmasm::Instruction::SHR ||
 		_instr == evmasm::Instruction::SAR
 	) && !m_evmVersion.hasBitwiseShifting())
-		errorForVM(7081_error, "only available for Constantinople-compatible");
+		errorForVM(6612_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
-		errorForVM(7082_error, "only available for Constantinople-compatible");
+		errorForVM(6166_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())
-		errorForVM(7083_error, "only available for Constantinople-compatible");
+		errorForVM(7110_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CHAINID && !m_evmVersion.hasChainID())
-		errorForVM(7084_error, "only available for Istanbul-compatible");
+		errorForVM(1561_error, "only available for Istanbul-compatible");
 	else if (_instr == evmasm::Instruction::PC)
 		m_errorReporter.warning(
 			2450_error,
@@ -601,7 +601,7 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 			"\" instruction is deprecated and will be removed in the next breaking release."
 		);
 	else if (_instr == evmasm::Instruction::SELFBALANCE && !m_evmVersion.hasSelfBalance())
-		errorForVM(7085_error, "only available for Istanbul-compatible");
+		errorForVM(3672_error, "only available for Istanbul-compatible");
 	else if (
 		_instr == evmasm::Instruction::JUMP ||
 		_instr == evmasm::Instruction::JUMPI ||
