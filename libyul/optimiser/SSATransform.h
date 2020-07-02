@@ -85,7 +85,7 @@ class NameDispenser;
  *
  * TODO Which transforms are required to keep this idempotent?
  *
- * Prerequisite: Disambiguator.
+ * Prerequisite: Disambiguator, For loop init rewriter.
  */
 class SSATransform: public ASTModifier
 {
