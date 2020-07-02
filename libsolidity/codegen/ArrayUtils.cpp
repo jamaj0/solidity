@@ -935,6 +935,7 @@ void ArrayUtils::clearStorageLoop(TypePointer _type) const
 			}
 			// stack: end_pos pos
 
+			// TODO is this still needed because we already have a function here?
 			// jump to and return from the loop to allow for duplicate code removal
 			evmasm::AssemblyItem returnTag = _context.pushNewTag();
 			_context << Instruction::SWAP2 << Instruction::SWAP1;
@@ -961,7 +962,7 @@ void ArrayUtils::clearStorageLoop(TypePointer _type) const
 			_context << zeroLoopEnd;
 			_context << Instruction::POP << Instruction::SWAP1;
 			// "return"
-			_context << Instruction::JUMP;
+			_context << Instruction::JUMP; // TODO does this need "out of "?
 
 			_context << returnTag;
 			solAssert(_context.stackHeight() == stackHeightStart - 1, "");
